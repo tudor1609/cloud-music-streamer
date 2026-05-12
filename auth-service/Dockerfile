@@ -1,14 +1,32 @@
-FROM eclipse-temurin:21-jdk-jammy
+# Stage 1: Build with Maven
+FROM eclipse-temurin:21-jdk-jammy AS build
 
-# Creăm un director pentru aplicație
 WORKDIR /app
 
-# Copiem fișierul JAR generat anterior în container
-# (Asigură-te că numele fișierului corespunde cu ce ai în target/)
-COPY target/*.jar app.jar
+# Copy Maven wrapper and pom.xml first for dependency caching
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
 
-# Expunem portul pe care rulează serviciul (8080, 8081 sau 8082)
-EXPOSE 8081
+# Make Maven wrapper executable
+RUN chmod +x mvnw
 
-# Comanda de pornire
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Download dependencies (cached layer)
+RUN ./mvnw dependency:resolve -B
+
+# Copy source code and build
+COPY src src
+RUN ./mvnw package -DskipTests -B
+
+# Stage 2: Runtime
+FROM eclipse-temurin:21-jre-jammy
+
+WORKDIR /app
+
+# Copy the built JAR from the build stage
+COPY --from=build /app/target/*.jar app.jar
+
+EXPOSE 8080
+
+# Start the application using Railway's PORT
+ENTRYPOINT ["sh", "-c", "java -jar app.jar --server.port=${PORT:-8081}"]
