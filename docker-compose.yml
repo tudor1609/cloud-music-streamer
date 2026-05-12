@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    # Rețeaua 'host' face ca aplicația să vadă internetul exact ca PC-ul tău
+    network_mode: "host"
+    # Când folosești network_mode: "host", secțiunea 'ports' este ignorată,
+    # aplicația va fi automat pe 8081
+
+  music-service:
+    build: ./music-service
+    container_name: music-service
+    network_mode: "host"
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    network_mode: "host"
