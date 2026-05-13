@@ -5,7 +5,9 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials; // Folosim clasa parinte
+import com.google.auth.oauth2.GoogleCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,8 +20,12 @@ import java.util.Collections;
 @Configuration
 public class GoogleDriveConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(GoogleDriveConfig.class);
+
     @Bean
     public Drive googleDrive() throws IOException, GeneralSecurityException {
+        log.info("Inițializare Google Drive Client cu debug logging...");
+
         String googleAuthJson = """
                 {
                   "type": "service_account",
@@ -36,17 +42,25 @@ public class GoogleDriveConfig {
                 }
                 """;
 
-        ByteArrayInputStream stream = new ByteArrayInputStream(googleAuthJson.getBytes(StandardCharsets.UTF_8));
+        log.debug("JSON-ul de auth are lungimea: {}", googleAuthJson.length());
 
-        // SCHIMBARE AICI: Folosim GoogleCredentials in loc de ServiceAccountCredentials
-        GoogleCredentials credentials = GoogleCredentials.fromStream(stream)
-                .createScoped(Collections.singleton(DriveScopes.DRIVE_READONLY));
+        try (ByteArrayInputStream stream = new ByteArrayInputStream(googleAuthJson.getBytes(StandardCharsets.UTF_8))) {
+            GoogleCredentials credentials = GoogleCredentials.fromStream(stream)
+                    .createScoped(Collections.singleton(DriveScopes.DRIVE_READONLY));
+            
+            log.info("Credențiale încărcate cu succes pentru: {}", 
+                credentials instanceof com.google.auth.oauth2.ServiceAccountCredentials ? 
+                ((com.google.auth.oauth2.ServiceAccountCredentials) credentials).getClientEmail() : "Unknown");
 
-        return new Drive.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                GsonFactory.getDefaultInstance(),
-                new HttpCredentialsAdapter(credentials))
-                .setApplicationName("CloudMusicStreamer")
-                .build();
+            return new Drive.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(),
+                    GsonFactory.getDefaultInstance(),
+                    new HttpCredentialsAdapter(credentials))
+                    .setApplicationName("CloudMusicStreamer")
+                    .build();
+        } catch (Exception e) {
+            log.error("EROARE la crearea Google Drive Client: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 }
