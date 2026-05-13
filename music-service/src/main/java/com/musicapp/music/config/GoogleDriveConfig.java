@@ -5,7 +5,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.auth.oauth2.GoogleCredentials; // Folosim clasa parinte
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,8 +20,6 @@ public class GoogleDriveConfig {
 
     @Bean
     public Drive googleDrive() throws IOException, GeneralSecurityException {
-        // Punem tot continutul fisierului JSON intr-un Text Block
-        // Asigura-te ca este EXACT continutul fisierului descarcat de la Google
         String googleAuthJson = """
                 {
                   "type": "service_account",
@@ -38,10 +36,10 @@ public class GoogleDriveConfig {
                 }
                 """;
 
-        // Convertim String-ul inapoi in Stream pentru a fi consumat de biblioteca Google
         ByteArrayInputStream stream = new ByteArrayInputStream(googleAuthJson.getBytes(StandardCharsets.UTF_8));
 
-        ServiceAccountCredentials credentials = ServiceAccountCredentials.fromStream(stream)
+        // SCHIMBARE AICI: Folosim GoogleCredentials in loc de ServiceAccountCredentials
+        GoogleCredentials credentials = GoogleCredentials.fromStream(stream)
                 .createScoped(Collections.singleton(DriveScopes.DRIVE_READONLY));
 
         return new Drive.Builder(
