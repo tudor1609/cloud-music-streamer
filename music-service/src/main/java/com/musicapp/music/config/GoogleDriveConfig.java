@@ -19,9 +19,23 @@ public class GoogleDriveConfig {
 
     @Bean
     public Drive googleDrive() throws IOException, GeneralSecurityException {
-        InputStream in = getClass().getResourceAsStream("/google-auth.json");
-        ServiceAccountCredentials credentials = (ServiceAccountCredentials) ServiceAccountCredentials.fromStream(in)
-                .createScoped(Collections.singleton(DriveScopes.DRIVE_READONLY));
+        // Citim variabilele de mediu din Railway
+        String clientEmail = System.getenv("GOOGLE_CLIENT_EMAIL");
+        String privateKeyRaw = System.getenv("GOOGLE_PRIVATE_KEY");
+
+        if (clientEmail == null || privateKeyRaw == null) {
+            throw new IllegalStateException("Variabilele GOOGLE_CLIENT_EMAIL sau GOOGLE_PRIVATE_KEY lipsesc!");
+        }
+
+        // FIX-UL CRITIC: Inlocuim \n simbolic cu newline real
+        String privateKey = privateKeyRaw.replace("\\n", "\n");
+
+        // Construim credentialele manual din string-uri, fara a mai depinde de fisierul .json
+        ServiceAccountCredentials credentials = ServiceAccountCredentials.newBuilder()
+                .setClientEmail(clientEmail)
+                .setPrivateKeyString(privateKey)
+                .setScopes(Collections.singleton(DriveScopes.DRIVE_READONLY))
+                .build();
 
         return new Drive.Builder(
                 GoogleNetHttpTransport.newTrustedTransport(),
