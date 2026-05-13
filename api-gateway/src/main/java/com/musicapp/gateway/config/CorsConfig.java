@@ -18,7 +18,7 @@ public class CorsConfig {
         // 1. Permitem doar originea frontend-ului tău (localhost:3000)
         corsConfig.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",                   // Pentru când testezi tu acasă
-                "https://dracify-frontend-al8fbr2uz-tudor1609s-projects.vercel.app/"
+                "https://dracify-frontend.vercel.app/"
         ));
 
         // 2. Ce metode lăsăm să treacă (punem tot ce e important)
