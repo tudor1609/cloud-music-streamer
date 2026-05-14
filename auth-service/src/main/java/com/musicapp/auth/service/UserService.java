@@ -43,4 +43,12 @@ public class UserService {
     public Set<User> getFriends(String username) {
         return getUserByUsername(username).getFriends();
     }
+    @Transactional
+    public void updateActivity(String username, String title, String artist) {
+        User user = userRepository.findByUsername(username).orElseThrow();
+        user.setCurrentSongTitle(title);
+        user.setCurrentSongArtist(artist);
+        user.setLastSeen(java.time.LocalDateTime.now());
+        userRepository.save(user);
+    }
 }
