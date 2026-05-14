@@ -30,9 +30,15 @@ public class MusicService {
     private final SongRepository songRepository;
 
     public List<Song> getAllSongs() {
-        // Opțional: Aici poți face o proiecție să nu trimiți pozele în lista mare,
-        // dar momentan lăsăm așa să vedem dacă duce memoria.
-        return songRepository.findAll();
+        // Folosim metoda optimizată din repository care ignoră pozele direct în SQL
+        return songRepository.findAllSongsLight();
+    }
+
+    public List<Song> search(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return songRepository.findAllSongsLight();
+        }
+        return songRepository.searchSongs(query);
     }
 
     @Async
@@ -121,4 +127,5 @@ public class MusicService {
             }
         }
     }
+
 }

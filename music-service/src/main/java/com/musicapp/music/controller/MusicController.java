@@ -24,6 +24,11 @@ public class MusicController {
         return musicService.getAllSongs();
     }
 
+    @GetMapping("/search")
+    public List<Song> search(@RequestParam String q) {
+        return musicService.search(q);
+    }
+
     @GetMapping("/scan")
     public String scan(@RequestParam String folderId) {
         try {
@@ -57,4 +62,6 @@ public class MusicController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+
 }
