@@ -3,8 +3,10 @@ package com.musicapp.auth.service;
 import com.musicapp.auth.model.User;
 import com.musicapp.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Set;
@@ -29,15 +31,24 @@ public class UserService {
 
     @Transactional
     public void addFriend(String currentUsername, String friendUsername) {
-        User user = getUserByUsername(currentUsername);
-        User friend = getUserByUsername(friendUsername);
-
-        if (user.getUsername().equals(friend.getUsername())) {
-            throw new RuntimeException("Nu te poți adăuga pe tine însuți!");
+        if (currentUsername.equalsIgnoreCase(friendUsername)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nu te poți adăuga singur!");
         }
 
+        User user = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new RuntimeException("Utilizator logat negăsit"));
+        User friend = userRepository.findByUsername(friendUsername)
+                .orElseThrow(() -> new RuntimeException("Prietenul căutat nu există"));
+
+        // Adăugăm pe User 2 în lista lui User 1
         user.getFriends().add(friend);
+
+        // ADAUGĂ ACEASTĂ LINIE: Adăugăm pe User 1 în lista lui User 2
+        friend.getFriends().add(user);
+
+        // Salvăm ambii utilizatori
         userRepository.save(user);
+        userRepository.save(friend);
     }
 
     public Set<User> getFriends(String username) {

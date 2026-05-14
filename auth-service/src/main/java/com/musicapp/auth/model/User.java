@@ -1,5 +1,6 @@
 package com.musicapp.auth.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Set;
@@ -36,5 +37,6 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "friend_id")
     )
+    @JsonIgnore // Aceasta oprește eroarea când trimiți datele spre React
     private Set<User> friends = new HashSet<>();
 }
