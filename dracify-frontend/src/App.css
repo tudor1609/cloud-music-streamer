@@ -1,38 +1,122 @@
-.App {
-  text-align: center;
+:root {
+    --bg-black: #000000;
+    --bg-surface: #121212;
+    --glass: rgba(255, 255, 255, 0.05);
+    --accent: #1db954;
+    --text-main: #ffffff;
+    --text-dim: #b3b3b3;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* Bara de sus cu Search */
+.top-nav {
+    height: 64px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.search-wrapper {
+    background: #242424;
+    border-radius: 500px; /* Extrem de rotunjit */
+    display: flex;
+    align-items: center;
+    padding: 6px 15px;
+    width: 100%;
+    max-width: 400px;
+    transition: background 0.2s;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.search-wrapper:focus-within {
+    background: #2a2a2a;
+    box-shadow: 0 0 0 1px #444;
 }
 
-.App-link {
-  color: #61dafb;
+.search-wrapper input {
+    background: transparent;
+    border: none;
+    color: white;
+    margin-left: 10px;
+    width: 100%;
+    outline: none;
+    font-size: 14px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Lista de piese */
+.song-list {
+    padding: 20px;
+}
+
+.song-item {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.song-item:hover { background: rgba(255,255,255,0.1); }
+
+.song-info {
+    display: flex;
+    flex-direction: column;
+    margin-left: 12px;
+}
+
+.song-title { color: white; font-weight: 500; }
+.song-artist { color: var(--text-dim); font-size: 13px; }
+
+/* Sidebar Social */
+.social-sidebar {
+    background: var(--bg-black);
+    border-left: 1px solid #282828;
+    padding: 24px 16px;
+}
+
+.add-friend-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #282828;
+}
+
+.small-search {
+    background: #1a1a1a;
+    border-radius: 4px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.small-search input {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 12px;
+    outline: none;
+}
+
+.user-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 13px;
+}
+
+.add-btn {
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 500px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
 }
