@@ -1,0 +1,51 @@
+:root {
+    --drac-red: #ff0000;
+    --bg-black: #000000;
+    --card-grey: #121212;
+    --input-bg: #1a1a1a;
+}
+
+body { margin: 0; background: var(--bg-black); color: white; font-family: 'Inter', sans-serif; }
+
+.dracify-app { display: flex; height: 100vh; }
+.sidebar { width: 240px; background: black; border-right: 1px solid #111; padding: 2rem; display: flex; flex-direction: column; }
+.main-content { flex: 1; padding: 2rem; overflow-y: auto; background: linear-gradient(180deg, #1a0000 0%, #000 50%); }
+
+.logo-box { background: var(--drac-red); width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-style: italic; border-radius: 4px; box-shadow: 0 0 15px rgba(255,0,0,0.4); }
+.logo-box.mini { width: 40px; height: 40px; font-size: 1.2rem; }
+
+.sidebar-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5rem; font-weight: 900; letter-spacing: -1px; color: var(--drac-red); margin-bottom: 3rem; }
+.sidebar-nav button { background: none; border: none; color: #888; display: flex; align-items: center; gap: 15px; width: 100%; padding: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+.sidebar-nav button.active { color: white; background: #111; border-radius: 8px; }
+
+.song-row { display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; padding: 12px 20px; cursor: pointer; border-radius: 6px; }
+.song-row:hover { background: rgba(255,255,255,0.05); }
+.song-row.active { background: rgba(255,0,0,0.1); color: var(--drac-red); }
+
+.player-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 90px; background: #0a0a0a; border-top: 1px solid #222; display: flex; align-items: center; padding: 0 2rem; justify-content: space-between; }
+.player-info { display: flex; align-items: center; gap: 15px; width: 300px; }
+.player-tag { font-size: 0.6rem; font-weight: bold; color: var(--drac-red); margin: 0; }
+.drac-audio { filter: invert(100%); width: 400px; }
+
+.login-screen { height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #300 0%, #000 100%); }
+.login-card { background: var(--card-grey); padding: 3rem; border-radius: 12px; width: 320px; text-align: center; border: 1px solid #300; }
+.drac-input { background: #000; display: flex; align-items: center; padding: 10px; margin: 15px 0; border-radius: 6px; border: 1px solid #222; }
+.drac-input input { background: none; border: none; color: white; margin-left: 10px; outline: none; width: 100%; }
+.drac-btn { background: var(--drac-red); color: white; border: none; width: 100%; padding: 12px; border-radius: 6px; font-weight: 900; cursor: pointer; margin-top: 10px; }
+.success-text { color: #00ff00; font-size: 0.8rem; font-weight: bold; margin-bottom: 1rem; }
+.error-text { color: var(--drac-red); font-size: 0.8rem; font-weight: bold; margin-bottom: 1rem; }
+
+.switch-text {
+    margin-top: 1.5rem;
+    font-size: 0.75rem;
+    color: #888;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.switch-text:hover { color: white; }
+.text-red { color: var(--drac-red); font-weight: bold; }
+
+.shadow-glow {
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.15);
+}
