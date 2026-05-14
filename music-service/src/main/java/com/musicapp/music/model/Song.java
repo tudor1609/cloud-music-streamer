@@ -1,6 +1,6 @@
 package com.musicapp.music.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore; // Importă asta
+import com.fasterxml.jackson.annotation.JsonIgnore; // Importă asta!
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +22,7 @@ public class Song {
     private String googleDriveId;
     private String mimeType;
 
-    @JsonIgnore // ASTA ESTE LINIA CRITICĂ
+    @JsonIgnore // Aceasta linie este vitala pentru viteza si CORS
     @Column(name = "album_art", columnDefinition = "bytea")
     private byte[] albumArt;
 }

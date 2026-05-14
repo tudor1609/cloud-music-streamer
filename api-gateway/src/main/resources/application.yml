@@ -12,7 +12,7 @@ spring:
             - Path=/auth/**
           filters:
             # Dacă chemi /auth/login, trimite către /login în auth-service
-            - RewritePath=/auth/(?<segment>.*), /$\{segment}
+            - RewritePath=/music/(?<segment>.*), /${segment}
 
         - id: music-service
           # Folosim variabila de mediu din Railway
