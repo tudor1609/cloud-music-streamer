@@ -15,13 +15,24 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final EmailService emailService; // Injectăm serviciul de email
 
     public String register(AuthRequest request) {
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Utilizatorul există deja!");
+        }
+
         User user = User.builder()
                 .username(request.getUsername())
+                .email(request.getEmail()) // Salvăm email-ul
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
+
         userRepository.save(user);
+
+        // Trimitem mail-ul de bun venit în fundal
+        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername());
+
         return "User registered successfully!";
     }
 
