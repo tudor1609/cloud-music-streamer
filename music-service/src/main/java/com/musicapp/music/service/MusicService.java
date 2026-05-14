@@ -60,7 +60,6 @@ public class MusicService {
             }
             pageToken = result.getNextPageToken();
         } while (pageToken != null);
-        log.info("Scanare completa pentru folderul: {}", folderId);
     }
 
     private void processSongMetadata(File file) {
@@ -71,18 +70,27 @@ public class MusicService {
                 googleDrive.files().get(file.getId()).executeMediaAndDownloadTo(fos);
             }
 
-            Mp3File mp3file = new Mp3File(tempFile.toFile());
-            String title = file.getName();
-            String artist = "Unknown Artist";
-            String album = "Unknown Album";
+            String title = null;
+            String artist = null;
+            String album = null;
             byte[] albumArt = null;
 
-            if (mp3file.hasId3v2Tag()) {
-                var tag = mp3file.getId3v2Tag();
-                title = tag.getTitle() != null ? tag.getTitle() : title;
-                artist = tag.getArtist() != null ? tag.getArtist() : artist;
-                album = tag.getAlbum() != null ? tag.getAlbum() : album;
-                albumArt = tag.getAlbumImage();
+            try {
+                Mp3File mp3file = new Mp3File(tempFile.toFile());
+                if (mp3file.hasId3v2Tag()) {
+                    var tag = mp3file.getId3v2Tag();
+                    title = tag.getTitle();
+                    artist = tag.getArtist();
+                    album = tag.getAlbum();
+                    albumArt = tag.getAlbumImage();
+                } else if (mp3file.hasId3v1Tag()) {
+                    var tag = mp3file.getId3v1Tag();
+                    title = tag.getTitle();
+                    artist = tag.getArtist();
+                    album = tag.getAlbum();
+                }
+            } catch (Exception e) {
+                log.warn("Nu am putut citi tag-urile ID3 pentru {}, salvez doar datele de baza.", file.getName());
             }
 
             Song song = Song.builder()
@@ -96,16 +104,10 @@ public class MusicService {
                     .build();
 
             songRepository.save(song);
-            log.info("Adaugat: {} - {}", artist, title);
+            log.info("Adaugat in DB: {}", file.getName());
 
         } catch (Exception e) {
-            log.error("Eroare la {} : {}", file.getName(), e.getMessage());
-            songRepository.save(Song.builder()
-                    .name(file.getName())
-                    .title(file.getName())
-                    .googleDriveId(file.getId())
-                    .mimeType(file.getMimeType())
-                    .build());
+            log.error("Eroare critica la procesarea fisierului {}: {}", file.getName(), e.getMessage());
         } finally {
             if (tempFile != null) {
                 try { Files.deleteIfExists(tempFile); } catch (IOException ignored) {}

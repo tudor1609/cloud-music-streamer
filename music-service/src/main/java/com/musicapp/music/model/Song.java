@@ -14,14 +14,15 @@ public class Song {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private String title;
-    private String artist;
-    private String album;
+    private String name; // Numele brut al fișierului (ex: piesa1.mp3)
+
+    private String title;  // Poate fi null
+    private String artist; // Poate fi null
+    private String album;  // Poate fi null
+
     private String googleDriveId;
     private String mimeType;
 
-    @Lob
-    @Column(name = "album_art", columnDefinition = "bytea")
-    private byte[] albumArt;
+    @Column(name = "album_art", columnDefinition = "bytea") // Fără @Lob pentru Postgres
+    private byte[] albumArt; // Poate fi null
 }
