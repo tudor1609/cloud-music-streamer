@@ -25,8 +25,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/register", "/login", "/error").permitAll()
-                        .anyRequest().authenticated()
+                        // Gateway-ul protejează deja rutele, deci aici permitem tot
+                        // pentru ca endpoint-urile de activity să funcționeze
+                        .anyRequest().permitAll()
                 )
                 .build();
     }

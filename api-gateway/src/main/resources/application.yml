@@ -10,7 +10,6 @@ spring:
           predicates:
             - Path=/auth/**
           filters:
-            # Corectat: Segmentul de cautare trebuie sa fie /auth/
             - RewritePath=/auth/(?<segment>.*), /${segment}
             - name: JwtAuthenticationFilter
 
@@ -19,6 +18,5 @@ spring:
           predicates:
             - Path=/music/**
           filters:
-            # Corectat: Eliminat backslash-ul din fata semnului $
             - RewritePath=/music/(?<segment>.*), /${segment}
             - name: JwtAuthenticationFilter
