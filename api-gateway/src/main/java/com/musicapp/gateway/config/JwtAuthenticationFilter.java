@@ -19,75 +19,52 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAuthenticationFilter.Config> {
 
-    // Secretul trebuie să fie identic cu cel din Auth-Service pentru a putea decripta token-ul
     private final String SECRET = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
-    // Listă de rute care nu au nevoie de autentificare
-    private final List<String> whitelistedPaths = List.of("/login", "/register");
+    // Lista de rute care trec DIRECT fara token
+    private final List<String> whitelistedPaths = List.of("/login", "/register", "/auth/login", "/auth/register");
 
     public JwtAuthenticationFilter() {
         super(Config.class);
     }
 
-    public static class Config {
-        // Poți adăuga configurări extra aici dacă e nevoie pe viitor
-    }
+    public static class Config {}
 
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
-            ServerHttpRequest request = exchange.getRequest();
-            String path = request.getURI().getPath();
+            String path = exchange.getRequest().getURI().getPath();
 
-            // 1. Verificăm dacă ruta curentă este în "whitelist" (ex: /auth/login sau /auth/register)
-            // Folosim .contains pentru că ruta poate veni ca /auth/login din frontend
+            // VERIFICARE WHITELIST
             if (whitelistedPaths.stream().anyMatch(path::contains)) {
                 return chain.filter(exchange);
             }
 
-            // 2. Verificăm prezența header-ului Authorization
-            if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+            String authHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return onError(exchange, "Lipseste header-ul Authorization", HttpStatus.UNAUTHORIZED);
             }
 
-            String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return onError(exchange, "Format invalid pentru header-ul Authorization", HttpStatus.UNAUTHORIZED);
-            }
-
             String token = authHeader.substring(7);
-
             try {
-                // 3. Validăm semnătura și extragem informațiile (Claims)
                 SecretKey key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+                Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
 
-                Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(key)
-                        .build()
-                        .parseClaimsJws(token)
-                        .getBody();
-
-                String username = claims.getSubject();
-
-                // 4. "Mutăm" cererea adăugând header-ul custom X-User-Name
-                // Această metodă permite microserviciilor (Music, Auth) să știe cine e user-ul
-                // fără să mai aibă nevoie de librării JWT greoaie.
+                // Trimitem username-ul mai departe prin header
                 ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                        .header("X-User-Name", username)
+                        .header("X-User-Name", claims.getSubject())
                         .build();
 
-                // Trimitem cererea modificată mai departe în lanț
                 return chain.filter(exchange.mutate().request(mutatedRequest).build());
-
             } catch (Exception e) {
-                return onError(exchange, "Token invalid sau expirat", HttpStatus.UNAUTHORIZED);
+                return onError(exchange, "Token invalid", HttpStatus.UNAUTHORIZED);
             }
         };
     }
 
     private Mono<Void> onError(ServerWebExchange exchange, String err, HttpStatus status) {
         exchange.getResponse().setStatusCode(status);
-        // Putem adăuga și un mesaj de eroare în body dacă vrei, dar un status code e suficient pentru început
         return exchange.getResponse().setComplete();
     }
 }
