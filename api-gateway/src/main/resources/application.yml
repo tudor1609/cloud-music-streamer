@@ -6,23 +6,19 @@ spring:
     gateway:
       routes:
         - id: auth-service
-          # Folosim variabila de mediu din Railway
           uri: ${AUTH_SERVICE_URL}
           predicates:
             - Path=/auth/**
           filters:
-            # Dacă chemi /auth/login, trimite către /login în auth-service
-            - RewritePath=/music/(?<segment>.*), /${segment}
+            # Corectat: Segmentul de cautare trebuie sa fie /auth/
+            - RewritePath=/auth/(?<segment>.*), /${segment}
             - name: JwtAuthenticationFilter
+
         - id: music-service
-          # Folosim variabila de mediu din Railway
           uri: ${MUSIC_SERVICE_URL}
           predicates:
-            # Am schimbat din /api/music/** în /music/** ca să meargă curl-ul tău
             - Path=/music/**
           filters:
-            # Dacă chemi /music/songs, trimite către /songs în music-service
-            - RewritePath=/music/(?<segment>.*), /$\{segment}
+            # Corectat: Eliminat backslash-ul din fata semnului $
+            - RewritePath=/music/(?<segment>.*), /${segment}
             - name: JwtAuthenticationFilter
-
-
