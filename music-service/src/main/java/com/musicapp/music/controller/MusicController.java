@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Permite accesul din Vercel
 public class MusicController {
 
     private final MusicService musicService;
