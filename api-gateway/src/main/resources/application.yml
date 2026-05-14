@@ -13,7 +13,7 @@ spring:
           filters:
             # Dacă chemi /auth/login, trimite către /login în auth-service
             - RewritePath=/music/(?<segment>.*), /${segment}
-
+            - name: JwtAuthenticationFilter
         - id: music-service
           # Folosim variabila de mediu din Railway
           uri: ${MUSIC_SERVICE_URL}
@@ -24,3 +24,5 @@ spring:
             # Dacă chemi /music/songs, trimite către /songs în music-service
             - RewritePath=/music/(?<segment>.*), /$\{segment}
             - name: JwtAuthenticationFilter
+
+
