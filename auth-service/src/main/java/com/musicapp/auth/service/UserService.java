@@ -29,24 +29,21 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
+    @Transactional // Asigură că ambele salvări se fac împreună
     public void addFriend(String currentUsername, String friendUsername) {
         if (currentUsername.equalsIgnoreCase(friendUsername)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nu te poți adăuga singur!");
         }
 
         User user = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new RuntimeException("Utilizator logat negăsit"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Userul tău nu există"));
         User friend = userRepository.findByUsername(friendUsername)
-                .orElseThrow(() -> new RuntimeException("Prietenul căutat nu există"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prietenul nu a fost găsit"));
 
-        // Adăugăm pe User 2 în lista lui User 1
+        // Adăugăm în ambele părți pentru reciprocitate
         user.getFriends().add(friend);
-
-        // ADAUGĂ ACEASTĂ LINIE: Adăugăm pe User 1 în lista lui User 2
         friend.getFriends().add(user);
 
-        // Salvăm ambii utilizatori
         userRepository.save(user);
         userRepository.save(friend);
     }
