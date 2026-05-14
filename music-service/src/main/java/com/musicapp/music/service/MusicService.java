@@ -6,12 +6,15 @@ import com.google.api.services.drive.model.FileList;
 import com.musicapp.music.model.Song;
 import com.musicapp.music.repository.SongRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,14 +28,21 @@ public class MusicService {
     }
 
     /**
-     * Scanează folderul și folosește paginarea pentru a găsi TOATE piesele.
+     * Scanează folderul asincron și folosește paginarea pentru a găsi TOATE piesele.
+     * @Async face ca această metodă să ruleze pe un fir de execuție separat.
      */
+    @Async
+    @Transactional
     public void scanFolder(String folderId) throws IOException {
         String query = "'" + folderId + "' in parents and mimeType contains 'audio/'";
         String pageToken = null;
 
+        // Optimizare: Luăm toate ID-urile existente o singură dată pentru a evita SELECT-uri repetate în buclă
+        Set<String> existingIds = songRepository.findAll().stream()
+                .map(Song::getGoogleDriveId)
+                .collect(Collectors.toSet());
+
         do {
-            // Cerem lista de fișiere, incluzând nextPageToken pentru paginare
             FileList result = googleDrive.files().list()
                     .setQ(query)
                     .setFields("nextPageToken, files(id, name, mimeType)")
@@ -42,21 +52,21 @@ public class MusicService {
             List<File> files = result.getFiles();
             if (files != null) {
                 for (File file : files) {
-                    // Verificăm dacă piesa există deja după ID-ul de Drive ca să nu o dublăm
-                    if (songRepository.findByGoogleDriveId(file.getId()).isEmpty()) {
+                    // Verificăm în memorie (Set) dacă piesa există deja - mult mai rapid
+                    if (!existingIds.contains(file.getId())) {
                         Song song = Song.builder()
                                 .name(file.getName())
                                 .googleDriveId(file.getId())
                                 .mimeType(file.getMimeType())
                                 .build();
                         songRepository.save(song);
+                        // Adăugăm în set-ul local pentru a preveni duplicatele în cadrul aceleiași scanări
+                        existingIds.add(file.getId());
                     }
                 }
             }
 
-            // Preluăm token-ul pentru pagina următoare (va fi null când terminăm)
             pageToken = result.getNextPageToken();
-
         } while (pageToken != null);
     }
 
