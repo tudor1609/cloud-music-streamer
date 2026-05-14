@@ -28,13 +28,12 @@ public class MusicController {
     public String scan(@RequestParam String folderId) {
         try {
             musicService.scanFolder(folderId);
-            return "Scanare pornita in fundal...";
+            return "Scanare pornita asincron...";
         } catch (Exception e) {
             return "Eroare: " + e.getMessage();
         }
     }
 
-    // Endpoint-ul de stream - acum la radacina microserviciului
     @GetMapping("/stream/{googleDriveId}")
     public ResponseEntity<InputStreamResource> streamSong(@PathVariable String googleDriveId) {
         try {

@@ -1,5 +1,6 @@
 package com.musicapp.music.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore; // Importă asta
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,15 +15,14 @@ public class Song {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name; // Numele brut al fișierului (ex: piesa1.mp3)
-
-    private String title;  // Poate fi null
-    private String artist; // Poate fi null
-    private String album;  // Poate fi null
-
+    private String name;
+    private String title;
+    private String artist;
+    private String album;
     private String googleDriveId;
     private String mimeType;
 
-    @Column(name = "album_art", columnDefinition = "bytea") // Fără @Lob pentru Postgres
-    private byte[] albumArt; // Poate fi null
+    @JsonIgnore // ASTA ESTE LINIA CRITICĂ
+    @Column(name = "album_art", columnDefinition = "bytea")
+    private byte[] albumArt;
 }
