@@ -57,6 +57,11 @@
             <artifactId>google-auth-library-oauth2-http</artifactId>
             <version>1.19.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.mpatric</groupId>
+            <artifactId>mp3agic</artifactId>
+            <version>0.9.1</version>
+        </dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>

@@ -3,21 +3,26 @@ package com.musicapp.music.service;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.mpatric.mp3agic.Mp3File;
 import com.musicapp.music.model.Song;
 import com.musicapp.music.repository.SongRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MusicService {
 
     private final Drive googleDrive;
@@ -27,17 +32,12 @@ public class MusicService {
         return songRepository.findAll();
     }
 
-    /**
-     * Scanează folderul asincron și folosește paginarea pentru a găsi TOATE piesele.
-     * @Async face ca această metodă să ruleze pe un fir de execuție separat.
-     */
     @Async
     @Transactional
     public void scanFolder(String folderId) throws IOException {
         String query = "'" + folderId + "' in parents and mimeType contains 'audio/'";
         String pageToken = null;
 
-        // Optimizare: Luăm toate ID-urile existente o singură dată pentru a evita SELECT-uri repetate în buclă
         Set<String> existingIds = songRepository.findAll().stream()
                 .map(Song::getGoogleDriveId)
                 .collect(Collectors.toSet());
@@ -52,25 +52,64 @@ public class MusicService {
             List<File> files = result.getFiles();
             if (files != null) {
                 for (File file : files) {
-                    // Verificăm în memorie (Set) dacă piesa există deja - mult mai rapid
                     if (!existingIds.contains(file.getId())) {
-                        Song song = Song.builder()
-                                .name(file.getName())
-                                .googleDriveId(file.getId())
-                                .mimeType(file.getMimeType())
-                                .build();
-                        songRepository.save(song);
-                        // Adăugăm în set-ul local pentru a preveni duplicatele în cadrul aceleiași scanări
+                        processSongMetadata(file);
                         existingIds.add(file.getId());
                     }
                 }
             }
-
             pageToken = result.getNextPageToken();
         } while (pageToken != null);
+        log.info("Scanare completa pentru folderul: {}", folderId);
     }
 
-    public InputStream streamSong(String googleDriveId) throws IOException {
-        return googleDrive.files().get(googleDriveId).executeMediaAsInputStream();
+    private void processSongMetadata(File file) {
+        Path tempFile = null;
+        try {
+            tempFile = Files.createTempFile("scan_", ".mp3");
+            try (FileOutputStream fos = new FileOutputStream(tempFile.toFile())) {
+                googleDrive.files().get(file.getId()).executeMediaAndDownloadTo(fos);
+            }
+
+            Mp3File mp3file = new Mp3File(tempFile.toFile());
+            String title = file.getName();
+            String artist = "Unknown Artist";
+            String album = "Unknown Album";
+            byte[] albumArt = null;
+
+            if (mp3file.hasId3v2Tag()) {
+                var tag = mp3file.getId3v2Tag();
+                title = tag.getTitle() != null ? tag.getTitle() : title;
+                artist = tag.getArtist() != null ? tag.getArtist() : artist;
+                album = tag.getAlbum() != null ? tag.getAlbum() : album;
+                albumArt = tag.getAlbumImage();
+            }
+
+            Song song = Song.builder()
+                    .name(file.getName())
+                    .title(title)
+                    .artist(artist)
+                    .album(album)
+                    .albumArt(albumArt)
+                    .googleDriveId(file.getId())
+                    .mimeType(file.getMimeType())
+                    .build();
+
+            songRepository.save(song);
+            log.info("Adaugat: {} - {}", artist, title);
+
+        } catch (Exception e) {
+            log.error("Eroare la {} : {}", file.getName(), e.getMessage());
+            songRepository.save(Song.builder()
+                    .name(file.getName())
+                    .title(file.getName())
+                    .googleDriveId(file.getId())
+                    .mimeType(file.getMimeType())
+                    .build());
+        } finally {
+            if (tempFile != null) {
+                try { Files.deleteIfExists(tempFile); } catch (IOException ignored) {}
+            }
+        }
     }
 }
