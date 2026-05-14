@@ -22,7 +22,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     private final String SECRET = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
     // Lista de rute care trec DIRECT fara token
-    private final List<String> whitelistedPaths = List.of("/login", "/register", "/auth/login", "/auth/register");
+    private final List<String> whitelistedPaths = List.of("/login", "/register", "/auth/login", "/auth/register","/album-art");
 
     public JwtAuthenticationFilter() {
         super(Config.class);
